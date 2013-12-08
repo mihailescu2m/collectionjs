@@ -36,7 +36,8 @@ sub main{
 	print header('application/json');
 
 	my @hosts = get_all_hosts ();
-	my @plugins = keys get_plugin_selection ();
+	my $plugins1 = get_plugin_selection ();
+    my @plugins = keys %$plugins1;
 	@plugins = sort { $a cmp $b } @plugins;
 
 	my $json->{"hosts"} = \@hosts;
