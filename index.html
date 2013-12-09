@@ -64,6 +64,67 @@
 	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
 	<script src="lib/collection.js"></script>
 
+	<script type='text/javascript'>
+	// function to load when page is loaded
+	$(document).ready(function() {
+
+		// define additional variables
+		CollectionJS.events = $('body');
+		CollectionJS.s_host = '';
+		CollectionJS.s_plugin = '';
+
+		// get hosts and plugins, then display them in the dropdown menus
+        $.getJSON('bin/getHosts.cgi', function (data) {
+                var hosts = [];
+                $.each(data.hosts, function (index, host) {
+                        hosts.push('<li><a href="#">' + host + '</a></li>');
+                });
+                $('#hostname').html(hosts.join(""));
+                $('#hostname li').on('click', function () {
+                        CollectionJS.s_host = $(this).find('a').html();
+                        $('#s_hostname').html(CollectionJS.s_host);
+                        CollectionJS.events.trigger('draw');
+                });
+                var plugins = [];
+                $.each(data.plugins, function (index, plugin) {
+                        plugins.push('<li><a href="#">' + plugin + '</a></li>');
+                });
+                $('#plugin').html(plugins.join(""));
+                $('#plugin li').on('click', function () {
+                        CollectionJS.s_plugin = $(this).find('a').html();
+                        $('#s_plugin').html(CollectionJS.s_plugin);
+                        CollectionJS.events.trigger('draw');
+                });
+        });
+
+		// function run when selecting hosts or plugins in the menu
+		CollectionJS.events.on('draw', function () {
+			// do not get charts if we don't have both hostname and plugin
+			if (CollectionJS.s_host.length > 0 && CollectionJS.s_plugin.length > 0) {
+				// get a list of existing charts
+				$.getJSON('bin/getPlugin.cgi?hostname=' + CollectionJS.s_host + '&plugin=' + CollectionJS.s_plugin, function (data) {
+					$('#charts').empty();
+					$.each(data.charts, function (index, chart) {
+						var url = 'bin/getChart.cgi?hostname=' + chart.hostname + '&plugin=' + chart.plugin;
+						if (chart.plugin_instance) url += '&plugin_instance=' + chart.plugin_instance;
+						if (chart.type) url += '&type=' + chart.type;
+						if (chart.type_instance && !chart.ignore_type_instance) url += '&type_instance=' + chart.type_instance;
+						// create div to cotain the highchart
+						jQuery('<div/>', {
+							class: 'highchart',
+							style: 'min-width: 400px; height: 300px; margin: 0 auto; padding-bottom: 20px;',
+							'data-url': url,
+							'data-start': '-10800',
+							'data-options': '{}'
+						}).appendTo('#charts');
+					}); // end each
+					renderCharts();
+				}); // end getJSON
+			} // end if
+		}); // end draw function
+	}); // end document-ready function
+	</script>
+
   </body>
 </html>
 
